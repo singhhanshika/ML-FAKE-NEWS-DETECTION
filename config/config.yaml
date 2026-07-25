@@ -1,0 +1,86 @@
+project:
+  name: "Fake News Detection"
+  version: "1.0.0"
+  random_seed: 42
+
+paths:
+  fake_data: "data/raw/Fake.csv"
+  real_data: "data/raw/True.csv"
+  processed_data: "data/processed/news.csv"
+  model: "models/fake_news_pipeline.joblib"
+  metadata: "models/model_metadata.json"
+  metrics: "models/metrics.json"
+  model_comparison: "reports/model_comparison.csv"
+  leakage_report: "reports/leakage_report.json"
+  error_analysis: "reports/error_analysis.csv"
+  figures: "reports/figures"
+
+data:
+  required_columns: ["title", "text"]
+  label_mapping:
+    0: "Fake News"
+    1: "Real News"
+  title_body_separator: " bodytext "
+  minimum_training_words: 8
+  near_duplicate_threshold: 0.92
+
+split:
+  strategy: "duplicate_safe"
+  train_size: 0.70
+  validation_size: 0.15
+  test_size: 0.15
+
+preprocessing:
+  lowercase: true
+  replace_urls: true
+  replace_numbers: false
+  remove_source_markers: true
+  preserve_negations: ["not", "no", "never", "neither", "nor"]
+
+vectorizer:
+  word:
+    ngram_range: [1, 2]
+    min_df: 2
+    max_df: 0.98
+    max_features: 50000
+    sublinear_tf: true
+    strip_accents: "unicode"
+    norm: "l2"
+  character:
+    enabled: true
+    ngram_range: [3, 5]
+    min_df: 3
+    max_features: 30000
+    sublinear_tf: true
+
+models:
+  candidates:
+    - "dummy"
+    - "naive_bayes"
+    - "logistic_regression"
+    - "passive_aggressive"
+    - "linear_svm"
+  logistic_regression:
+    C: 2.0
+    max_iter: 2000
+  passive_aggressive:
+    C: 0.5
+    max_iter: 1500
+  linear_svm:
+    C: 1.0
+  naive_bayes:
+    alpha: 0.5
+
+evaluation:
+  primary_metric: "macro_f1"
+  cross_validation_folds: 5
+  calibration_methods: ["sigmoid", "isotonic"]
+  calibration_f1_tolerance: 0.005
+
+inference:
+  maximum_characters: 50000
+  minimum_recommended_words: 20
+  minimum_vocabulary_coverage: 0.05
+  supported_language_ascii_ratio: 0.55
+  explanation_features_per_class: 8
+
